@@ -11,6 +11,11 @@ class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return PostDetailSerializer
+        return PostListSerializer
+
     def get_queryset(self):
         queryset = super().get_queryset()
         # Фільтрація за хештегом, якщо передано ?hashtag=music

@@ -4,6 +4,13 @@ from rest_framework import serializers
 from .models import Post, Comment, Hashtag, PostHashtag, User
 
 
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ['id', 'post', 'author', 'content', 'created_at']
+        read_only_fields = ['author', 'created_at']
+
+
 class PostSerializer(serializers.ModelSerializer):
     hashtags = serializers.ListField(
         child=serializers.CharField(max_length=100),
@@ -13,16 +20,19 @@ class PostSerializer(serializers.ModelSerializer):
 
     hashtag_list = serializers.SerializerMethodField(read_only=True)
 
+    comments = CommentSerializer(many=True, read_only=True)
+
     class Meta:
         model = Post
         fields = ['id', 'title', 'content', 'created_at', 'author',
-                  'hashtags', 'hashtag_list']
+                  'hashtags', 'hashtag_list', 'comments',]
         # 'hashtags' (write_only) – список рядків
         # 'hashtag_list' (read_only) – те, що віддаємо на фронт
+        read_only_fields = ['author', 'created_at']
 
     def get_hashtag_list(self, obj):
         # Повертаємо назви хештегів
-        return [h.name for h in obj.hashtag_set.all()]
+        return [ph.hashtag.name for ph in obj.posthashtag_set.all()]
 
     def create(self, validated_data):
         # Витягуємо список хештегів (якщо передані)
@@ -55,16 +65,22 @@ class PostSerializer(serializers.ModelSerializer):
         return instance
 
 
-class CommentSerializer(serializers.ModelSerializer):
+class PostListSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Comment
-        fields = '__all__'
+        model = Post
+        fields = ['id', 'title', 'content', 'created_at']
+
+class PostDetailSerializer(serializers.ModelSerializer):
+    comments = CommentSerializer(many=True, read_only=True)
+    class Meta:
+        model = Post
+        fields = ['id', 'title', 'content', 'created_at', 'comments']
 
 
 class HashtagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Hashtag
-        fields = '__all__'
+        fields = ['id', 'name']
 
 
 class PostHashtagSerializer(serializers.ModelSerializer):

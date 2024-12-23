@@ -3,11 +3,13 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import PostViewSet, CommentViewSet
 from .views_auth import RegisterView, LoginView
+from .views_hashtags import HashtagViewSet
 from .views_users import UserProfileView
 
 router = DefaultRouter()
 router.register(r'posts', PostViewSet, basename='post')
 router.register(r'comments', CommentViewSet, basename='comment')
+router.register(r'hashtags', HashtagViewSet, basename='hashtags')
 
 urlpatterns = [
     path('', include(router.urls)),
