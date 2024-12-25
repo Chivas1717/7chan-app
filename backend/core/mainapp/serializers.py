@@ -11,23 +11,26 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only_fields = ['author', 'created_at']
 
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email']
+
+
 class PostSerializer(serializers.ModelSerializer):
     hashtags = serializers.ListField(
         child=serializers.CharField(max_length=100),
         write_only=True,
         required=False
     )
-
     hashtag_list = serializers.SerializerMethodField(read_only=True)
-
     comments = CommentSerializer(many=True, read_only=True)
+    author = UserSerializer(read_only=True)
 
     class Meta:
         model = Post
         fields = ['id', 'title', 'content', 'created_at', 'author',
-                  'hashtags', 'hashtag_list', 'comments',]
-        # 'hashtags' (write_only) – список рядків
-        # 'hashtag_list' (read_only) – те, що віддаємо на фронт
+                  'hashtags', 'hashtag_list', 'comments']
         read_only_fields = ['author', 'created_at']
 
     def get_hashtag_list(self, obj):
@@ -67,13 +70,13 @@ class PostSerializer(serializers.ModelSerializer):
 class PostListSerializer(serializers.ModelSerializer):
     hashtag_list = serializers.SerializerMethodField()
     comments = CommentSerializer(many=True, read_only=True)
+    author = UserSerializer(read_only=True)  # Додаємо UserSerializer
 
     class Meta:
         model = Post
-        fields = ['id', 'title', 'content', 'created_at', 'hashtag_list', 'comments']
+        fields = ['id', 'title', 'content', 'created_at', 'hashtag_list', 'comments', 'author']
 
     def get_hashtag_list(self, obj):
-        # Повертаємо назви хештегів через модель PostHashtag
         return [ph.hashtag.name for ph in obj.posthashtags.all()]
 
 class PostDetailSerializer(serializers.ModelSerializer):
