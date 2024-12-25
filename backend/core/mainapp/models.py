@@ -30,7 +30,7 @@ class Hashtag(models.Model):
 
 
 class PostHashtag(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='posthashtags')
     hashtag = models.ForeignKey(Hashtag, on_delete=models.CASCADE)
 
     def __str__(self):

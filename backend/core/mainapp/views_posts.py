@@ -17,12 +17,11 @@ class PostViewSet(viewsets.ModelViewSet):
         return PostListSerializer
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        # Фільтрація за хештегом, якщо передано ?hashtag=music
+        queryset = super().get_queryset().prefetch_related('posthashtags__hashtag')
         hashtag = self.request.query_params.get('hashtag')
         if hashtag:
             hashtag = hashtag.lower().strip()
-            queryset = queryset.filter(hashtag__name=hashtag)
+            queryset = queryset.filter(posthashtags__hashtag__name=hashtag)
         return queryset
 
     def perform_create(self, serializer):

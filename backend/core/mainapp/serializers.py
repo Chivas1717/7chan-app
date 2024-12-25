@@ -7,7 +7,7 @@ from .models import Post, Comment, Hashtag, PostHashtag, User
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ['id', 'post', 'author', 'content', 'created_at']
+        fields = ['id', 'author', 'content', 'created_at']
         read_only_fields = ['author', 'created_at']
 
 
@@ -31,8 +31,7 @@ class PostSerializer(serializers.ModelSerializer):
         read_only_fields = ['author', 'created_at']
 
     def get_hashtag_list(self, obj):
-        # Повертаємо назви хештегів
-        return [ph.hashtag.name for ph in obj.posthashtag_set.all()]
+        return [ph.hashtag.name for ph in obj.posthashtags.all()]
 
     def create(self, validated_data):
         # Витягуємо список хештегів (якщо передані)
@@ -66,9 +65,16 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class PostListSerializer(serializers.ModelSerializer):
+    hashtag_list = serializers.SerializerMethodField()
+    comments = CommentSerializer(many=True, read_only=True)
+
     class Meta:
         model = Post
-        fields = ['id', 'title', 'content', 'created_at']
+        fields = ['id', 'title', 'content', 'created_at', 'hashtag_list', 'comments']
+
+    def get_hashtag_list(self, obj):
+        # Повертаємо назви хештегів через модель PostHashtag
+        return [ph.hashtag.name for ph in obj.posthashtags.all()]
 
 class PostDetailSerializer(serializers.ModelSerializer):
     comments = CommentSerializer(many=True, read_only=True)
