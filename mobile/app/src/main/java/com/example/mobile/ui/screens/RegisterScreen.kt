@@ -10,18 +10,24 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.mobile.data.remote.RegisterRequest
 import com.example.mobile.data.remote.RetrofitClient
+import com.example.mobile.util.TokenManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun RegisterScreen(
     onNavigateBack: () -> Unit,
-    onRegisterSuccess: (String) -> Unit
+    onRegisterSuccess: () -> Unit
 ) {
+    val context = LocalContext.current
+    val tokenManager = remember { TokenManager(context) }
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -93,7 +99,12 @@ fun RegisterScreen(
                                     password = password
                                 )
                             )
-                            onRegisterSuccess(response.token)
+                            withContext(Dispatchers.Main) {
+                                tokenManager.saveToken(response.token)
+                                tokenManager.saveUserId(response.user_id) // Зберігаємо userId
+                            }
+
+                            onRegisterSuccess()
                         } catch (e: Exception) {
                             errorMessage = e.localizedMessage ?: "Register failed"
                         } finally {

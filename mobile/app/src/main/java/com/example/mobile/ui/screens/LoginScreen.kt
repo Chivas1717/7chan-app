@@ -10,23 +10,29 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.mobile.data.remote.LoginRequest
 import com.example.mobile.data.remote.RetrofitClient
+import com.example.mobile.util.TokenManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
-    onLoginSuccess: (String) -> Unit
+    onLoginSuccess: () -> Unit
 ) {
     // Стан для Username та Password
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+    val tokenManager = remember { TokenManager(context) }
 
     val scope = rememberCoroutineScope()
 
@@ -86,8 +92,12 @@ fun LoginScreen(
                             val response = RetrofitClient.apiService.login(
                                 LoginRequest(username = username, password = password)
                             )
+                            withContext(Dispatchers.Main) {
+                                tokenManager.saveToken(response.token)
+                                tokenManager.saveUserId(response.user_id) // Зберігаємо userId
+                            }
                             // Якщо OK, зберігаємо token
-                            onLoginSuccess(response.token)
+                            onLoginSuccess()
                         } catch (e: Exception) {
                             errorMessage = e.localizedMessage ?: "Login failed"
                         } finally {

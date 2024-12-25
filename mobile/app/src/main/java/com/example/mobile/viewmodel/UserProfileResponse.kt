@@ -1,0 +1,24 @@
+package com.example.mobile.viewmodel
+
+data class UserProfileResponse(
+    val id: Int,
+    val username: String,
+    val email: String, // замінюємо displayName на email
+    val posts: List<PostResponse>
+)
+
+data class PostResponse(
+    val id: Int,
+    val title: String,
+    val content: String,
+    val hashtags: List<String>,
+    val comments: List<CommentResponse>, // нове поле для коментарів
+    val createdAt: String
+)
+
+data class CommentResponse(
+    val id: Int,
+    val author: String,
+    val content: String,
+    val createdAt: String
+)
