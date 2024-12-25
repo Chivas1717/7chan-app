@@ -3,7 +3,7 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django.db.models import Q
 from .models import Post
-from .serializers import PostSerializer
+from .serializers import PostSerializer, PostListSerializer, PostDetailSerializer
 
 
 class PostViewSet(viewsets.ModelViewSet):

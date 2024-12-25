@@ -1,7 +1,8 @@
 # mainapp/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import PostViewSet, CommentViewSet
+from .views_posts import PostViewSet
+from .views_comments import CommentViewSet
 from .views_auth import RegisterView, LoginView
 from .views_hashtags import HashtagViewSet
 from .views_users import UserProfileView
