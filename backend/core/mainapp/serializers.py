@@ -107,7 +107,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         user_posts = Post.objects.filter(author=obj)
         # Якщо є вже PostSerializer, можемо його використати
         # Але можна і просто показати id/title
-        return [{"id": p.id, "title": p.title} for p in user_posts]
+        return PostListSerializer(user_posts, many=True).data
 
 
 class RegisterSerializer(serializers.ModelSerializer):
