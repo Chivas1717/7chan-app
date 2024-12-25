@@ -13,16 +13,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.mobile.data.remote.LoginRequest
+import com.example.mobile.data.remote.RetrofitClient
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    onLoginSuccess: (String) -> Unit
 ) {
-    // Стан для Email та Password
-    var email by remember { mutableStateOf("") }
+    // Стан для Username та Password
+    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // Розміщуємо контент по центру
+    val scope = rememberCoroutineScope()
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -41,11 +48,11 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
+                value = username,
+                onValueChange = { username = it },
+                label = { Text("Username") },
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Unspecified),
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -63,15 +70,35 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            if (errorMessage != null) {
+                Text(text = errorMessage!!, color = MaterialTheme.colors.error)
+            }
             // Кнопка логіну (поки без логіки)
             Button(
                 onClick = {
-                    // TODO: Виклик логіки логіну
-                    // Тут звертатимемося до бекенду (пізніше)
+                    scope.launch {
+                        isLoading = true
+                        errorMessage = null
+                        print("here");
+                        try {
+                            // У Django логін вимагає username чи email?
+                            // Припустімо, у бекенді "username" — це email
+                            val response = RetrofitClient.apiService.login(
+                                LoginRequest(username = username, password = password)
+                            )
+                            // Якщо OK, зберігаємо token
+                            onLoginSuccess(response.token)
+                        } catch (e: Exception) {
+                            errorMessage = e.localizedMessage ?: "Login failed"
+                        } finally {
+                            isLoading = false
+                        }
+                    }
                 },
+                enabled = !isLoading,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Login")
+                Text(text = if (isLoading) "Loading..." else "Login")
             }
 
             Spacer(modifier = Modifier.height(16.dp))

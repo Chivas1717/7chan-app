@@ -13,14 +13,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.mobile.data.remote.RegisterRequest
+import com.example.mobile.data.remote.RetrofitClient
+import kotlinx.coroutines.launch
 
 @Composable
 fun RegisterScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onRegisterSuccess: (String) -> Unit
 ) {
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val scope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -74,11 +82,29 @@ fun RegisterScreen(
 
             Button(
                 onClick = {
-                    // TODO: Виклик логіки реєстрації
+                    scope.launch {
+                        isLoading = true
+                        errorMessage = null
+                        try {
+                            val response = RetrofitClient.apiService.register(
+                                RegisterRequest(
+                                    username = username,
+                                    email = email,
+                                    password = password
+                                )
+                            )
+                            onRegisterSuccess(response.token)
+                        } catch (e: Exception) {
+                            errorMessage = e.localizedMessage ?: "Register failed"
+                        } finally {
+                            isLoading = false
+                        }
+                    }
                 },
+                enabled = !isLoading,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Register")
+                Text(text = if (isLoading) "Registering..." else "Register")
             }
 
             Spacer(modifier = Modifier.height(16.dp))
