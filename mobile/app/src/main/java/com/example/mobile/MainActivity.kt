@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
 
                 // Ініціалізація ProfileViewModel з фабрикою
                 val profileViewModel: ProfileViewModel = viewModel(
-                    factory = ProfileViewModelFactory(apiService)
+                    factory = ProfileViewModelFactory(apiService, tokenManager)
                 )
 
                 AppNavGraph(

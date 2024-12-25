@@ -1,14 +1,20 @@
 package com.example.mobile.viewmodel
 
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.mobile.data.remote.ApiService
+import com.example.mobile.util.TokenManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class ProfileViewModel(private val apiService: ApiService) : ViewModel() {
+class ProfileViewModel(
+    private val apiService: ApiService,
+    private val tokenManager: TokenManager
+) : ViewModel() {
 
     // Стан профілю
     private val _userProfile = MutableStateFlow<UserProfileResponse?>(null)
@@ -54,14 +60,19 @@ class ProfileViewModel(private val apiService: ApiService) : ViewModel() {
             }
         }
     }
+
+    fun logout() {
+        tokenManager.clearAll() // Очищення токена
+    }
 }
 
 class ProfileViewModelFactory(
-    private val apiService: ApiService
+    private val apiService: ApiService,
+    private val tokenManager: TokenManager
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {
-            return ProfileViewModel(apiService) as T
+            return ProfileViewModel(apiService, tokenManager) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

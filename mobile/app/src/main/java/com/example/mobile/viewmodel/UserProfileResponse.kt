@@ -13,7 +13,8 @@ data class PostResponse(
     val content: String,
     val hashtags: List<String>,
     val comments: List<CommentResponse>, // нове поле для коментарів
-    val createdAt: String
+    val createdAt: String,
+    val author: AuthorResponse,
 )
 
 data class CommentResponse(
@@ -21,4 +22,10 @@ data class CommentResponse(
     val author: String,
     val content: String,
     val createdAt: String
+)
+
+data class AuthorResponse(
+    val id: Int,
+    val username: String,
+    val email: String,
 )

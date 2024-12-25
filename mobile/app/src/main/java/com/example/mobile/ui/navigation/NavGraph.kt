@@ -35,7 +35,7 @@ fun AppNavGraph(
                 },
                 onLoginSuccess = {
                     // Зберегти token і перейти на Home
-                    navController.navigate(Screen.Home.route) {
+                    navController.navigate(Screen.Profile.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 }
@@ -50,7 +50,7 @@ fun AppNavGraph(
                 },
                 onRegisterSuccess = {
                     // Зберегти token і перейти на Home
-                    navController.navigate(Screen.Home.route) {
+                    navController.navigate(Screen.Profile.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 }
@@ -75,6 +75,11 @@ fun AppNavGraph(
                     userId = userId, // Передаємо id до ProfileScreen
                     onNavigateToPostDetails = { postId ->
                         navController.navigate(Screen.PostDetails.createRoute(postId))
+                    },
+                    onLogout = {
+                        navController.navigate("login") {
+                            popUpTo("profile/$userId") { inclusive = true }
+                        }
                     }
                 )
             }

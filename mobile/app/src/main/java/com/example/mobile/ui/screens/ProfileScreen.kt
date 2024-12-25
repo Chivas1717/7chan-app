@@ -22,7 +22,8 @@ import com.example.mobile.viewmodel.PostResponse
 fun ProfileScreen(
     viewModel: ProfileViewModel,
     userId: Int,
-    onNavigateToPostDetails: (Int) -> Unit
+    onNavigateToPostDetails: (Int) -> Unit,
+    onLogout: () -> Unit,
 ) {
     val userProfile by viewModel.userProfile.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -32,24 +33,46 @@ fun ProfileScreen(
         viewModel.fetchUserProfile(userId)
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        if (isLoading) {
-            CircularProgressIndicator(Modifier.align(Alignment.Center))
-        } else if (errorMessage != null) {
-            Text(
-                text = errorMessage ?: "Unknown error",
-                color = Color.Red,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.align(Alignment.Center)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Profile") },
+                backgroundColor = Color(0xFF1E1E2C),
+                actions = {
+                    // Кнопка логауту
+                    TextButton(
+                        onClick = {
+                            viewModel.logout() // Очищуємо токен
+                            onLogout()         // Редірект на логін
+                        },
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        Text("Logout", color = Color.Red)
+                    }
+                }
             )
-        } else if (userProfile != null) {
-            UserProfileContent(
-                profile = userProfile!!,
-                onDeletePost = { viewModel.deletePost(it) },
-                onPostClick = onNavigateToPostDetails
-            )
+        },
+        content = { padding ->
+            Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+                if (isLoading) {
+                    CircularProgressIndicator(Modifier.align(Alignment.Center))
+                } else if (errorMessage != null) {
+                    Text(
+                        text = errorMessage ?: "Unknown error",
+                        color = Color.Red,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                } else if (userProfile != null) {
+                    UserProfileContent(
+                        profile = userProfile!!,
+                        onDeletePost = { viewModel.deletePost(it) },
+                        onPostClick = onNavigateToPostDetails
+                    )
+                }
+            }
         }
-    }
+    )
 }
 
 @Composable
@@ -106,7 +129,7 @@ fun PostItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Created: ${post.createdAt}", style = MaterialTheme.typography.caption)
+                Text("Created: ${post.author}", style = MaterialTheme.typography.caption)
                 IconButton(onClick = onDelete) {
                     Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red)
                 }
