@@ -18,6 +18,13 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ['id', 'author', 'content', 'created_at']
         read_only_fields = ['author', 'created_at']
 
+    def create(self, validated_data):
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            # Встановлюємо автора як поточного користувача
+            validated_data['author'] = request.user
+        return super().create(validated_data)
+
 
 class PostSerializer(serializers.ModelSerializer):
     hashtags = serializers.ListField(
