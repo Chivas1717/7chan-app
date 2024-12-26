@@ -15,6 +15,4 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
     def perform_update(self, serializer):
-        # Якщо потрібно, можна перевіряти, чи user є автором
-        # але це вже питання пермішнів
         serializer.save()

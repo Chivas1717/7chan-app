@@ -4,17 +4,19 @@ from rest_framework import serializers
 from .models import Post, Comment, Hashtag, PostHashtag, User
 
 
-class CommentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Comment
-        fields = ['id', 'author', 'content', 'created_at']
-        read_only_fields = ['author', 'created_at']
-
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email']
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = UserSerializer(read_only=True)
+    class Meta:
+        model = Comment
+        fields = ['id', 'author', 'content', 'created_at']
+        read_only_fields = ['author', 'created_at']
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -79,11 +81,18 @@ class PostListSerializer(serializers.ModelSerializer):
     def get_hashtag_list(self, obj):
         return [ph.hashtag.name for ph in obj.posthashtags.all()]
 
+
 class PostDetailSerializer(serializers.ModelSerializer):
     comments = CommentSerializer(many=True, read_only=True)
+    hashtag_list = serializers.SerializerMethodField()
+    author = UserSerializer(read_only=True)
+
     class Meta:
         model = Post
-        fields = ['id', 'title', 'content', 'created_at', 'comments']
+        fields = ['id', 'author', 'title', 'content', 'created_at', 'comments', 'hashtag_list']
+
+    def get_hashtag_list(self, obj):
+        return [ph.hashtag.name for ph in obj.posthashtags.all()]
 
 
 class HashtagSerializer(serializers.ModelSerializer):
