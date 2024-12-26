@@ -1,15 +1,15 @@
 # mainapp/views_posts.py
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from django.db.models import Q
 from .models import Post
 from .serializers import PostSerializer, PostListSerializer, PostDetailSerializer
 
 
 class PostViewSet(viewsets.ModelViewSet):
+    permission_classes = [AllowAny]
     queryset = Post.objects.all().order_by('-created_at')
     serializer_class = PostSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
