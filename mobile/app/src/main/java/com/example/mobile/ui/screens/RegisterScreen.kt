@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.mobile.data.remote.ApiService
 import com.example.mobile.data.remote.RegisterRequest
 import com.example.mobile.data.remote.RetrofitClient
 import com.example.mobile.util.TokenManager
@@ -24,7 +25,8 @@ import kotlinx.coroutines.withContext
 @Composable
 fun RegisterScreen(
     onNavigateBack: () -> Unit,
-    onRegisterSuccess: () -> Unit
+    onRegisterSuccess: () -> Unit,
+    apiService: ApiService,
 ) {
     val context = LocalContext.current
     val tokenManager = remember { TokenManager(context) }
@@ -92,7 +94,7 @@ fun RegisterScreen(
                         isLoading = true
                         errorMessage = null
                         try {
-                            val response = RetrofitClient.apiService.register(
+                            val response = apiService.register(
                                 RegisterRequest(
                                     username = username,
                                     email = email,

@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.mobile.data.remote.ApiService
 import com.example.mobile.data.remote.LoginRequest
 import com.example.mobile.data.remote.RetrofitClient
 import com.example.mobile.util.TokenManager
@@ -24,7 +25,8 @@ import kotlinx.coroutines.withContext
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
+    apiService: ApiService
 ) {
     // Стан для Username та Password
     var username by remember { mutableStateOf("") }
@@ -89,7 +91,7 @@ fun LoginScreen(
                         try {
                             // У Django логін вимагає username чи email?
                             // Припустімо, у бекенді "username" — це email
-                            val response = RetrofitClient.apiService.login(
+                            val response = apiService.login(
                                 LoginRequest(username = username, password = password)
                             )
                             withContext(Dispatchers.Main) {

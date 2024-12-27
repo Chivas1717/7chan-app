@@ -1,5 +1,7 @@
 package com.example.mobile.data.remote
 
+import com.example.mobile.viewmodel.PostDetailsResponse
+import com.example.mobile.viewmodel.PostResponse
 import com.example.mobile.viewmodel.UserProfileResponse
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -10,6 +12,8 @@ import retrofit2.http.Path
 // Моделі запитів
 data class LoginRequest(val username: String, val password: String)
 data class RegisterRequest(val username: String, val email: String, val password: String)
+data class PostCommentRequest(val post: Int, val content: String)
+
 
 // Моделі відповідей
 data class LoginResponse(val token: String, val user_id: Int, val username: String)
@@ -27,5 +31,14 @@ interface ApiService {
 
     @DELETE("posts/{id}/")
     suspend fun deletePost(@Path("id") postId: Int)
+
+    @GET("posts/{id}/")
+    suspend fun getPostDetails(@Path("id") postId: Int): PostDetailsResponse
+
+    @GET("posts/")
+    suspend fun getPosts(): List<PostResponse>
+
+    @POST("comments/")
+    suspend fun postComment(@Body request: PostCommentRequest)
 
 }
