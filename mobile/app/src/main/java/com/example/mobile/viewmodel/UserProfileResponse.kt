@@ -29,3 +29,8 @@ data class AuthorResponse(
     val username: String,
     val email: String,
 )
+
+data class HashtagResponse(
+    val id: Int,
+    val name: String
+)

@@ -6,13 +6,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MailOutline
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -26,6 +29,7 @@ fun ProfileScreen(
     userId: Int,
     onNavigateToPostDetails: (Int) -> Unit,
     onLogout: () -> Unit,
+    onNavigateToCreatePost: () -> Unit // <-- Додали цей колбек
 ) {
     val userProfile by viewModel.userProfile.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -55,36 +59,42 @@ fun ProfileScreen(
             )
         },
         content = { padding ->
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)) {
-                if (isLoading) {
-                    CircularProgressIndicator(Modifier.align(Alignment.Center))
-                } else if (errorMessage != null) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = errorMessage ?: "Unknown error",
-                            color = Color.Red,
-                            textAlign = TextAlign.Center,
-                        )
-                        Button(
-                            onClick = { viewModel.fetchUserProfile(userId) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF202433))
-                        ) {
-                            Text("Refresh", color = Color.White)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                when {
+                    isLoading -> {
+                        CircularProgressIndicator(Modifier.align(Alignment.Center))
+                    }
+                    errorMessage != null -> {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = errorMessage ?: "Unknown error",
+                                color = Color.Red,
+                                textAlign = TextAlign.Center,
+                            )
+                            Button(
+                                onClick = { viewModel.fetchUserProfile(userId) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF202433))
+                            ) {
+                                Text("Refresh", color = Color.White)
+                            }
                         }
                     }
-
-                } else if (userProfile != null) {
-                    UserProfileContent(
-                        profile = userProfile!!,
-                        onDeletePost = { viewModel.deletePost(it) },
-                        onPostClick = onNavigateToPostDetails,
-                        onRefresh = { viewModel.fetchUserProfile(userId) } // Додаємо рефреш
-                    )
+                    userProfile != null -> {
+                        UserProfileContent(
+                            profile = userProfile!!,
+                            onDeletePost = { viewModel.deletePost(it) },
+                            onPostClick = onNavigateToPostDetails,
+                            onRefresh = { viewModel.fetchUserProfile(userId) },
+                            onNavigateToCreatePost = onNavigateToCreatePost // <-- Передаємо далі
+                        )
+                    }
                 }
             }
         }
@@ -96,7 +106,8 @@ fun UserProfileContent(
     profile: UserProfileResponse,
     onDeletePost: (Int) -> Unit,
     onPostClick: (Int) -> Unit,
-    onRefresh: () -> Unit // Колбек для рефрешу
+    onRefresh: () -> Unit,
+    onNavigateToCreatePost: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -105,7 +116,7 @@ fun UserProfileContent(
             .padding(top = 16.dp)
     ) {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            // Шапка профілю
+            // 1) Шапка профілю
             item {
                 Box(
                     modifier = Modifier
@@ -115,32 +126,64 @@ fun UserProfileContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        // Ось тут додаємо аватар
+                        UserProfileAvatar()
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Далі — email та username
                         Text(profile.email, style = MaterialTheme.typography.h5, color = Color.White)
                         Text("@" + profile.username, style = MaterialTheme.typography.body2, color = Color.Gray)
                     }
                 }
             }
 
-            // Кнопка для оновлення
-            item {
-                Button(
-                    onClick = onRefresh,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF202433))
-                ) {
-                    Text("Refresh", color = Color.White)
+            // 2) Кнопка для оновлення профілю (рефреш)
+            if (profile.posts.isNotEmpty()) {
+                item {
+                    Button(
+                        onClick = onRefresh,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF202433))
+                    ) {
+                        Text("Refresh", color = Color.White)
+                    }
                 }
             }
 
-            // Список постів
-            items(profile.posts) { post ->
-                PostItem(
-                    post = post,
-                    onClick = { onPostClick(post.id) },
-                    onDelete = { onDeletePost(post.id) }
-                )
+            // 3) Якщо постів немає — показуємо повідомлення і кнопку "Create Post"
+            if (profile.posts.isEmpty()) {
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "У вас немає жодного поста",
+                            color = Color.White,
+                            style = MaterialTheme.typography.subtitle1
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = onNavigateToCreatePost,
+                            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF202433))
+                        ) {
+                            Text("Створити пост", color = Color.White)
+                        }
+                    }
+                }
+            } else {
+                // 4) Якщо пости є, відображаємо їх
+                items(profile.posts) { post ->
+                    PostItem(
+                        post = post,
+                        onClick = { onPostClick(post.id) },
+                        onDelete = { onDeletePost(post.id) }
+                    )
+                }
             }
         }
     }
@@ -228,6 +271,23 @@ fun PostItem(
                 }
             }
         }
+    }
+}
+@Composable
+fun UserProfileAvatar() {
+    Box(
+        modifier = Modifier
+            .size(80.dp)               // розмір “аватарки”
+            .clip(CircleShape)         // заокруглюємо форму в коло
+            .background(Color.Gray),   // базовий фон (для фейкового аватара)
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Person,
+            contentDescription = "User avatar",
+            tint = Color.White,
+            modifier = Modifier.size(48.dp) // розмір самої іконки
+        )
     }
 }
 

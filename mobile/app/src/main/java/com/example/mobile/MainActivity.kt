@@ -11,6 +11,8 @@ import com.example.mobile.ui.theme.MobileTheme
 import com.example.mobile.util.TokenManager
 import com.example.mobile.viewmodel.HomeViewModel
 import com.example.mobile.viewmodel.HomeViewModelFactory
+import com.example.mobile.viewmodel.NewPostViewModel
+import com.example.mobile.viewmodel.NewPostViewModelFactory
 import com.example.mobile.viewmodel.PostDetailsViewModel
 import com.example.mobile.viewmodel.PostDetailsViewModelFactory
 import com.example.mobile.viewmodel.ProfileViewModel
@@ -43,12 +45,17 @@ class MainActivity : ComponentActivity() {
                     factory = HomeViewModelFactory(apiService)
                 )
 
+                val newPostViewModel: NewPostViewModel = viewModel(
+                    factory = NewPostViewModelFactory(apiService)
+                )
+
                 AppNavGraph(
                     navController = navController,
                     startDestination = startDest,
                     profileViewModel = profileViewModel,
                     postDetailsViewModel = postDetailsViewModel,
                     homeViewModel = homeViewModel,
+                    newPostViewModel = newPostViewModel,
                     apiService = apiService
                 )
             }

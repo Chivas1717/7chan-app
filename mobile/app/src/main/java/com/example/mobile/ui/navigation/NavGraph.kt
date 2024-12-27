@@ -1,5 +1,6 @@
 package com.example.mobile.ui.navigation
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
@@ -11,7 +12,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -25,6 +30,7 @@ import com.example.mobile.data.remote.ApiService
 import com.example.mobile.ui.screens.*
 import com.example.mobile.util.TokenManager
 import com.example.mobile.viewmodel.HomeViewModel
+import com.example.mobile.viewmodel.NewPostViewModel
 import com.example.mobile.viewmodel.PostDetailsViewModel
 import com.example.mobile.viewmodel.ProfileViewModel
 
@@ -48,6 +54,7 @@ fun AppNavGraph(
     profileViewModel: ProfileViewModel,
     postDetailsViewModel: PostDetailsViewModel,
     homeViewModel: HomeViewModel,
+    newPostViewModel: NewPostViewModel,
     apiService: ApiService,
 ) {
     val items = listOf(
@@ -57,51 +64,59 @@ fun AppNavGraph(
     )
     val context = LocalContext.current
     val tokenManager = remember { TokenManager(context) }
+
+    var currentRoute by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(navController) {
+        navController.currentBackStackEntryFlow.collect { backStackEntry ->
+            currentRoute = backStackEntry.destination.route
+        }
+    }
+
     Scaffold(
         bottomBar = {
-            BottomNavigation(
-                backgroundColor = Color(0xFF202433),
-                contentColor = Color.White
-            ) {
-                val currentRoute = navController.currentBackStackEntry?.destination?.route
-                items.forEach { screen ->
-                    BottomNavigationItem(
-                        icon = { Icon(screen.icon, contentDescription = screen.route) },
-                        label = { Text(screen.title) },
-                        selected = currentRoute == screen.route,
-                        onClick = {
-                            when (screen) {
-                                is Screen.Profile -> {
-                                    // Перехід до профілю з userId
-                                    val userId = tokenManager.getUserId()
-                                    if (userId != null) {
-                                        navController.navigate(Screen.Profile.createRoute(userId))
-                                    } else {
-                                        // Handle the null case
-                                        navController.navigate(Screen.Login.route) {
-                                            popUpTo(navController.graph.startDestinationId) {
-                                                inclusive = true
+            if (currentRoute in items.map { it.route }) { // Показуємо тільки на потрібних екранах
+                BottomNavigation(
+                    backgroundColor = Color(0xFF202433),
+                    contentColor = Color.White
+                ) {
+                    items.forEach { screen ->
+                        BottomNavigationItem(
+                            icon = { Icon(screen.icon, contentDescription = screen.route) },
+                            label = { Text(screen.title) },
+                            selected = currentRoute == screen.route,
+                            onClick = {
+                                when (screen) {
+                                    is Screen.Profile -> {
+                                        val userId = tokenManager.getUserId()
+                                        if (userId != null) {
+                                            navController.navigate(Screen.Profile.createRoute(userId))
+                                        } else {
+                                            navController.navigate(Screen.Login.route) {
+                                                popUpTo(navController.graph.startDestinationId) {
+                                                    inclusive = true
+                                                }
+                                            }
+                                        }
+                                    }
+                                    else -> {
+                                        if (currentRoute != screen.route) {
+                                            navController.navigate(screen.route) {
+                                                popUpTo(navController.graph.startDestinationId) {
+                                                    saveState = true
+                                                }
+                                                launchSingleTop = true
+                                                restoreState = true
                                             }
                                         }
                                     }
                                 }
-                                else -> {
-                                    if (currentRoute != screen.route) {
-                                        navController.navigate(screen.route) {
-                                            popUpTo(navController.graph.startDestinationId) {
-                                                saveState = true
-                                            }
-                                            launchSingleTop = true
-                                            restoreState = true
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        alwaysShowLabel = true,
-                        selectedContentColor = Color.Cyan,
-                        unselectedContentColor = Color.Gray
-                    )
+                            },
+                            alwaysShowLabel = true,
+                            selectedContentColor = Color.Cyan,
+                            unselectedContentColor = Color.Gray
+                        )
+                    }
                 }
             }
         }
@@ -150,9 +165,9 @@ fun AppNavGraph(
             // Екран Home (головна стрічка)
             composable(Screen.Home.route) {
                 HomeScreen(
-                onNavigateToPostDetails = { postId ->
-                            navController.navigate(Screen.PostDetails.createRoute(postId))
-                        },
+                    onNavigateToPostDetails = { postId ->
+                        navController.navigate(Screen.PostDetails.createRoute(postId))
+                    },
                     viewModel = homeViewModel,
                 )
             }
@@ -174,6 +189,9 @@ fun AppNavGraph(
                             navController.navigate(Screen.Login.route) {
                                 popUpTo(Screen.Profile.route) { inclusive = true }
                             }
+                        },
+                        onNavigateToCreatePost = {
+                            navController.navigate(Screen.CreatePost.route)
                         }
                     )
                 }
@@ -189,7 +207,22 @@ fun AppNavGraph(
                     )
                 }
             }
+
+            composable(Screen.CreatePost.route) {
+                NewPostScreen(
+                    viewModel = newPostViewModel,
+                    onPostSuccess = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Home.route) { inclusive = true }
+                        }
+                    },
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
         }
     }
-
 }
+
