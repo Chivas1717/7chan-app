@@ -5,14 +5,15 @@ from django.db.models import Q
 from .models import Post
 from .serializers import PostSerializer, PostListSerializer, PostDetailSerializer
 
-
 class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
     queryset = Post.objects.all().order_by('-created_at')
     serializer_class = PostSerializer
 
     def get_serializer_class(self):
-        if self.action == 'retrieve':
+        if self.action == 'create':
+            return PostSerializer
+        elif self.action == 'retrieve':
             return PostDetailSerializer
         return PostListSerializer
 
@@ -25,5 +26,5 @@ class PostViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        # Автор – поточний юзер (з токена)
+        print('calling create model')
         serializer.save(author=self.request.user)

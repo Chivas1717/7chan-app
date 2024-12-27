@@ -46,15 +46,16 @@ class PostSerializer(serializers.ModelSerializer):
         return [ph.hashtag.name for ph in obj.posthashtags.all()]
 
     def create(self, validated_data):
-        # Витягуємо список хештегів (якщо передані)
         hashtags_data = validated_data.pop('hashtags', [])
         post = Post.objects.create(**validated_data)
 
-        # Для кожного хештегу перевіряємо, чи існує
         for tag_name in hashtags_data:
-            tag_name = tag_name.lower().strip()  # чистимо від пробілів, зводимо в lowercase
+            tag_name = tag_name.lower().strip()
             hashtag, created = Hashtag.objects.get_or_create(name=tag_name)
-            post.hashtag_set.add(hashtag)
+            # Створюємо запис в PostHashtag
+            PostHashtag.objects.create(post=post, hashtag=hashtag)
+
+        return post
 
         return post
 

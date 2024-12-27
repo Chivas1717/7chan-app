@@ -3,7 +3,7 @@ from rest_framework.permissions import AllowAny
 from .models import Hashtag
 from .serializers import HashtagSerializer
 
-class HashtagViewSet(viewsets.ReadOnlyModelViewSet):
+class HashtagViewSet(viewsets.ModelViewSet):
     """
     ReadOnlyModelViewSet:
       - GET list ( /hashtags/ )
